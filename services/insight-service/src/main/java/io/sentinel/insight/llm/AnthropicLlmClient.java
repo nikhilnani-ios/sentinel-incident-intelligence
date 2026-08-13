@@ -29,7 +29,8 @@ import io.github.resilience4j.retry.annotation.Retry;
  * platform runs end to end with no credentials.
  */
 @Component
-@ConditionalOnExpression("'${sentinel.insight.anthropic.api-key:}'.length() > 0")
+@ConditionalOnExpression(
+        "'${sentinel.insight.mode:demo}' == 'anthropic' && '${sentinel.insight.anthropic.api-key:}'.length() > 0")
 public class AnthropicLlmClient implements LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(AnthropicLlmClient.class);
@@ -49,7 +50,7 @@ public class AnthropicLlmClient implements LlmClient {
                             "${sentinel.insight.anthropic.model:claude-sonnet-4-20250514}")
                     String model,
             @org.springframework.beans.factory.annotation.Value("${sentinel.insight.anthropic.timeout:PT60S}")
-                    Duration timeout) {
+                    String timeout) {
         this.webClient = webClientBuilder
                 .baseUrl(baseUrl)
                 .defaultHeader("x-api-key", apiKey)
@@ -57,7 +58,7 @@ public class AnthropicLlmClient implements LlmClient {
                 .defaultHeader("content-type", "application/json")
                 .build();
         this.model = model;
-        this.timeout = timeout;
+        this.timeout = Duration.parse(timeout);
     }
 
     @Override

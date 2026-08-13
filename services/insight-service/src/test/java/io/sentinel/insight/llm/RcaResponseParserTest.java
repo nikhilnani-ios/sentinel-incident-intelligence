@@ -107,9 +107,9 @@ class RcaResponseParserTest {
         RcaResult result = parser.parse(
                 """
                 {"headline":"h","summary":"s","confidence":0.5,"hypotheses":[
-                  {"cause":"1","likelihood":.1},{"cause":"2","likelihood":.2},
-                  {"cause":"3","likelihood":.3},{"cause":"4","likelihood":.4},
-                  {"cause":"5","likelihood":.5},{"cause":"6","likelihood":.9}
+                  {"cause":"1","likelihood":0.1},{"cause":"2","likelihood":0.2},
+                  {"cause":"3","likelihood":0.3},{"cause":"4","likelihood":0.4},
+                  {"cause":"5","likelihood":0.5},{"cause":"6","likelihood":0.9}
                 ]}
                 """);
 

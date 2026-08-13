@@ -112,7 +112,8 @@ services:
       args: { SERVICE: insight-service }
     environment:
       <<: *service-env
-      # Unset by default. Without it the stub client runs and the demo still works end to end.
+      # Public-safe default: deterministic analysis with no provider call or per-request cost.
+      INSIGHT_MODE: ${INSIGHT_MODE:-demo}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       INSIGHT_MODEL: ${INSIGHT_MODEL:-claude-sonnet-4-20250514}
     ports: ["8084:8080"]

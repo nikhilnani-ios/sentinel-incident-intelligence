@@ -87,18 +87,28 @@ incidents, which is how you see deduplication and rate limiting working.
 | Ingest API | http://localhost:8081 |
 | Incident API + OpenAPI | http://localhost:8083/docs |
 
-No API key is needed. Without `ANTHROPIC_API_KEY`, the insight service falls back to a deterministic
-stub client so the whole pipeline still runs end to end — analysis is clearly labelled as
-unavailable rather than faked.
+No API key is needed. `INSIGHT_MODE=demo` is the default: it returns a curated, deterministic
+analysis through the real context, parsing, persistence and UI pipeline without making an external
+request. The UI labels this output **Demo analysis**, and disables regeneration once it is stored so
+public visitors cannot create model costs.
+
+The available modes are:
+
+| `INSIGHT_MODE` | Intended use | External cost |
+| --- | --- | --- |
+| `demo` | Public portfolio and local product demonstration | None |
+| `stub` | Explicit failure/empty-provider testing | None |
+| `anthropic` | Private live model evaluation | Usage-based |
 
 ### Enable real root-cause analysis
 
-Create a local environment file from the checked-in template and add an Anthropic API key. Never
-commit the populated file; `.env` is ignored by Git.
+For private testing only, create a local environment file from the checked-in template, change
+`INSIGHT_MODE` to `anthropic`, and add an Anthropic API key. Never commit the populated file; `.env`
+is ignored by Git.
 
 ```bash
 cp .env.example .env
-# Edit .env and set ANTHROPIC_API_KEY, then recreate only the insight service:
+# Edit .env: set INSIGHT_MODE=anthropic and ANTHROPIC_API_KEY, then recreate the service:
 docker compose up -d --build --force-recreate insight-service
 docker compose ps insight-service
 ```
@@ -107,7 +117,8 @@ The default model is the pinned `claude-sonnet-4-20250514` snapshot. Pinning mak
 and incident audits reproducible; change `INSIGHT_MODEL` in `.env` only as an intentional model
 upgrade. Open an incident and choose **Analyse** or **Regenerate** after the service is healthy. The
 generated result records the model and token usage, while the deterministic stub remains available
-when no key is configured.
+when Anthropic mode is selected without a key. Return to `INSIGHT_MODE=demo` and remove the key before
+publishing a portfolio deployment.
 
 If analysis fails, inspect only the insight service first:
 

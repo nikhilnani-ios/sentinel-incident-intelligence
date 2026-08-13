@@ -55,14 +55,21 @@ export function AnalysisPanel({
 
   const confidenceLabel = (value: number) =>
     value >= 0.7 ? "well supported" : value >= 0.4 ? "partially supported" : "weak evidence";
+  const demoAnalysis = analysis?.model.startsWith("sentinel-demo") ?? false;
 
   return (
     <Panel
       title="Root cause analysis"
       actions={
         can("RESPONDER") && (
-          <Button variant="primary" loading={loading} onClick={() => generate(Boolean(analysis))}>
-            {analysis ? "Regenerate" : "Analyse"}
+          <Button
+            variant="primary"
+            loading={loading}
+            disabled={demoAnalysis}
+            title={demoAnalysis ? "Public demo analysis is fixed to prevent external API costs" : undefined}
+            onClick={() => generate(Boolean(analysis))}
+          >
+            {demoAnalysis ? "Demo analysis" : analysis ? "Regenerate" : "Analyse"}
           </Button>
         )
       }
@@ -86,6 +93,11 @@ export function AnalysisPanel({
 
       {analysis && (
         <div className="space-y-4">
+          {demoAnalysis && (
+            <div className="inline-flex border border-medium/40 bg-medium/10 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-medium">
+              Demo analysis · no external API call
+            </div>
+          )}
           <div>
             <h3 className="font-display text-lg tracking-tightest text-paper">{analysis.headline}</h3>
             <p className="mt-1 text-sm leading-relaxed text-muted">{analysis.summary}</p>
@@ -139,7 +151,7 @@ export function AnalysisPanel({
           )}
 
           <p className="hairline pt-2 font-mono text-[10px] text-muted">
-            {analysis.model} · {analysis.cached ? "cached — evidence unchanged" : "generated just now"} · advisory only
+            {analysis.model} · {demoAnalysis ? "curated portfolio evidence" : analysis.cached ? "cached — evidence unchanged" : "generated just now"} · advisory only
           </p>
         </div>
       )}

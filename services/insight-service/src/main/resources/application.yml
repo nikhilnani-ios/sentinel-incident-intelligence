@@ -29,6 +29,8 @@ sentinel:
   security:
     jwt-secret: ${JWT_SECRET:change-me-in-production-this-is-32-bytes-long}
   insight:
+    # demo: curated, deterministic and free; stub: explicit placeholder; anthropic: live API.
+    mode: ${INSIGHT_MODE:demo}
     max-output-tokens: 2000
     postmortem-max-output-tokens: 4000
     anthropic:

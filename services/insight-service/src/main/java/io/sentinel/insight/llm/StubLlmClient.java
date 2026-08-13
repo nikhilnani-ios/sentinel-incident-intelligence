@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
  * says so.
  */
 @Component
-@ConditionalOnExpression("'${sentinel.insight.anthropic.api-key:}'.length() == 0")
+@ConditionalOnExpression(
+        "'${sentinel.insight.mode:demo}' == 'stub' || ('${sentinel.insight.mode:demo}' == 'anthropic' && '${sentinel.insight.anthropic.api-key:}'.length() == 0)")
 public class StubLlmClient implements LlmClient {
 
     @Override
