@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  ...\(process.env.VERCEL ? {} : { output: "standalone" }\),
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
   async rewrites() {
     // The browser talks to one origin; the gateway routes by path in deployed environments.
     return [
