@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sentinel
+
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - configmap.yaml
+  - networkpolicy.yaml
+  - ingest-service.yaml
+  - correlation-service.yaml
+  - incident-service.yaml
+  - insight-service.yaml
+  - web.yaml
+  - ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: sentinel

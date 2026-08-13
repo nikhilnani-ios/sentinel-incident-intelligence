@@ -1,0 +1,50 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-ink-900 text-paper font-sans antialiased;
+    background-image:
+      linear-gradient(rgba(110, 155, 247, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110, 155, 247, 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  ::selection {
+    @apply bg-trace/30;
+  }
+
+  /* Numbers must line up in a column when you are scanning for the outlier. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-md border border-ink-700 bg-ink-800/60 backdrop-blur-sm;
+  }
+
+  .panel-heading {
+    @apply flex items-center justify-between border-b border-ink-700 px-4 py-3;
+  }
+
+  .label {
+    @apply font-mono text-[11px] uppercase tracking-[0.14em] text-muted;
+  }
+
+  .stat {
+    @apply font-display text-3xl tracking-tightest tabular;
+  }
+
+  .hairline {
+    @apply border-t border-ink-700;
+  }
+}

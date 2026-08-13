@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: ingest-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      properties:
+        # Bound how long a produce can block when the broker is unreachable; without this a
+        # broker outage turns into thread exhaustion on the HTTP layer.
+        max.block.ms: 5000
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      lettuce:
+        pool:
+          max-active: 32
+          max-idle: 8
+
+server:
+  port: ${PORT:8081}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 200
+
+sentinel:
+  security:
+    jwt-secret: ${JWT_SECRET:change-me-in-production-this-is-32-bytes-long}
+  ingest:
+    idempotency-window: PT6H
+    rate-limit:
+      capacity: 5000
+      refill-per-second: 500
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  metrics:
+    tags:
+      service: ingest-service
+  tracing:
+    sampling:
+      probability: ${TRACE_SAMPLE_RATE:0.1}
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+  service:
+    name: ingest-service
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{tenantId:-}]"

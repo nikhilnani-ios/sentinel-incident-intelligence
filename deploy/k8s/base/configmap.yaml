@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentinel-config
+  namespace: sentinel
+data:
+  SPRING_PROFILES_ACTIVE: production
+  PORT: "8080"
+  KAFKA_BOOTSTRAP_SERVERS: kafka-bootstrap.sentinel.svc.cluster.local:9092
+  REDIS_URL: redis://redis.sentinel.svc.cluster.local:6379
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4317
+  TRACE_SAMPLE_RATE: "0.1"
+  # Keep analysis reproducible across pod restarts and model alias changes.
+  INSIGHT_MODEL: claude-sonnet-4-20250514

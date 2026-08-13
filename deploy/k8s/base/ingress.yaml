@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sentinel
+  namespace: sentinel
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    # SSE connections are long lived by design; the default 60s proxy read timeout would sever the
+    # live incident feed every minute and mask it as a client-side reconnect loop.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [sentinel.example.io]
+      secretName: sentinel-tls
+  rules:
+    - host: sentinel.example.io
+      http:
+        paths:
+          - path: /v1/ingest
+            pathType: Prefix
+            backend: { service: { name: ingest-service, port: { number: 8080 } } }
+          - path: /v1/webhooks
+            pathType: Prefix
+            backend: { service: { name: ingest-service, port: { number: 8080 } } }
+          - path: /v1/incidents
+            pathType: Prefix
+            backend: { service: { name: incident-service, port: { number: 8080 } } }
+          - path: /v1/analytics
+            pathType: Prefix
+            backend: { service: { name: incident-service, port: { number: 8080 } } }
+          - path: /v1/catalog
+            pathType: Prefix
+            backend: { service: { name: incident-service, port: { number: 8080 } } }
+          - path: /v1/streams
+            pathType: Prefix
+            backend: { service: { name: incident-service, port: { number: 8080 } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: web, port: { number: 3000 } } }

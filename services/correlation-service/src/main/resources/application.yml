@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: correlation-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/sentinel}
+    username: ${DATABASE_USER:sentinel}
+    password: ${DATABASE_PASSWORD:sentinel}
+    hikari:
+      # Sized against the Kafka listener concurrency (3) plus headroom for the scheduler.
+      maximum-pool-size: 12
+      minimum-idle: 4
+      connection-timeout: 5000
+      leak-detection-threshold: 20000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: correlation-engine
+      max-poll-records: 200
+      properties:
+        # Correlating 200 records must fit comfortably inside this or the consumer is kicked out.
+        max.poll.interval.ms: 300000
+    listener:
+      ack-mode: manual_immediate
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+
+server:
+  port: ${PORT:8082}
+  shutdown: graceful
+
+sentinel:
+  security:
+    jwt-secret: ${JWT_SECRET:change-me-in-production-this-is-32-bytes-long}
+  correlation:
+    dedup-window: PT5M
+    correlation-window: PT15M
+    max-graph-depth: 3
+    attach-threshold: 0.55
+    deployment-lookback: PT1H
+    deployment-backfill-window: PT30M
+    graph-cache-ttl: PT5M
+    log-burst-threshold: 25
+    weights:
+      graph-proximity: 0.45
+      time-proximity: 0.30
+      severity-affinity: 0.10
+      label-overlap: 0.15
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      service: correlation-service
+  tracing:
+    sampling:
+      probability: ${TRACE_SAMPLE_RATE:0.1}
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+  service:
+    name: correlation-service
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{tenantId:-}]"

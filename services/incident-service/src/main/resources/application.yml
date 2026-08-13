@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: incident-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/sentinel}
+    username: ${DATABASE_USER:sentinel}
+    password: ${DATABASE_PASSWORD:sentinel}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 5000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    # Correlation-service applies the same migrations; Flyway's schema-history lock makes
+    # concurrent startup safe, and whichever instance wins, the other validates and moves on.
+    enabled: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    listener:
+      ack-mode: manual_immediate
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+  mvc:
+    async:
+      # Longer than the SSE emitter timeout so Spring never times out a healthy stream first.
+      request-timeout: 0
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+sentinel:
+  security:
+    jwt-secret: ${JWT_SECRET:change-me-in-production-this-is-32-bytes-long}
+    token-ttl: PT8H
+  escalation:
+    poll-interval-ms: 30000
+    batch-size: 50
+  stream:
+    heartbeat-interval-ms: 20000
+
+springdoc:
+  swagger-ui:
+    path: /docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      service: incident-service
+  tracing:
+    sampling:
+      probability: ${TRACE_SAMPLE_RATE:0.1}
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+  service:
+    name: incident-service
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{tenantId:-}]"

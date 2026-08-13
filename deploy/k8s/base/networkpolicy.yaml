@@ -1,0 +1,42 @@
+# Default deny, then open only what each service actually needs. Worth the manifest: the ingest
+# service is internet-facing by design, and it has no reason to reach the incident database.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: sentinel
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-platform-traffic
+  namespace: sentinel
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: sentinel
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { name: ingress-nginx }
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+    # Postgres, Kafka, Redis and the model API all live outside the namespace.
+    - to:
+        - ipBlock: { cidr: 0.0.0.0/0, except: [169.254.169.254/32] }
+      ports:
+        - port: 5432
+        - port: 6379
+        - port: 9092
+        - port: 443

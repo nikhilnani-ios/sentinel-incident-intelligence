@@ -1,0 +1,51 @@
+# The platform watches other systems; these are the rules that watch the platform. Dogfooding the
+# Alertmanager webhook means Sentinel raises its own incidents when its own pipeline degrades.
+groups:
+  - name: sentinel-pipeline
+    interval: 30s
+    rules:
+      - alert: SignalIngestionStalled
+        expr: rate(sentinel_ingest_accepted_total[5m]) == 0
+        for: 10m
+        labels:
+          severity: critical
+          service: ingest-service
+        annotations:
+          summary: No signals accepted for ten minutes
+          description: Either every monitored system is healthy, or ingestion is broken. Check the second one.
+
+      - alert: CorrelationLagGrowing
+        expr: kafka_consumer_fetch_manager_records_lag_max{job="sentinel-services"} > 10000
+        for: 5m
+        labels:
+          severity: high
+          service: correlation-service
+        annotations:
+          summary: Correlation is falling behind the signal stream
+
+      - alert: DeadLetterQueueFilling
+        expr: increase(sentinel_kafka_dlq_total[15m]) > 10
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: Messages are landing in the DLQ
+          description: More than ten messages exhausted their retries in fifteen minutes.
+
+      - alert: AnalysisCircuitOpen
+        expr: resilience4j_circuitbreaker_state{name="llm",state="open"} == 1
+        for: 2m
+        labels:
+          severity: medium
+          service: insight-service
+        annotations:
+          summary: Model provider circuit breaker is open
+          description: Analysis is degraded. Incident handling is unaffected.
+
+      - alert: EscalationSweepStopped
+        expr: rate(sentinel_escalation_triggered_total[30m]) == 0 and sentinel_incidents_open > 0
+        for: 30m
+        labels:
+          severity: high
+        annotations:
+          summary: Incidents are open but nothing is escalating
