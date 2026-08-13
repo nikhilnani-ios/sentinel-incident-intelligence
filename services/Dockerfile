@@ -1,6 +1,6 @@
 # One multi-stage build parameterised by service, so all four images share a base layer and the
 # dependency download is cached once for the whole monorepo rather than four times.
-FROM maven:3.9-eclipse-temurin-21 AS deps
+FROM maven:3-eclipse-temurin-26 AS deps
 WORKDIR /build
 
 COPY pom.xml .
