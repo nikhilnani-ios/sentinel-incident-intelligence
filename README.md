@@ -134,6 +134,37 @@ volumes (and intentionally deletes local demo data). Use `make logs` for applica
 
 ---
 
+## Free portfolio showcase
+
+The repository also ships a frontend-only showcase for free personal hosting. It uses the same
+pages and components as the live platform, with seeded browser-local data replacing network calls.
+Visitors can filter incidents, inspect the dependency graph, run the incident workflow and view the
+curated RCA/postmortem. Their changes stay in their own browser and no database, Kafka cluster,
+secret or model API is involved.
+
+Run it locally:
+
+```bash
+cd web
+cp .env.showcase.example .env.local
+npm ci
+npm run dev
+```
+
+Deploy it from this monorepo on Vercel:
+
+1. Import the GitHub repository.
+2. Set **Root Directory** to `web`.
+3. Keep the detected Next.js build settings.
+4. Add `NEXT_PUBLIC_SHOWCASE_MODE=true` for Production, Preview and Development.
+5. Deploy. Do not add database, JWT or model-provider secrets to this frontend project.
+
+Vercel's Hobby plan is intended for personal, non-commercial projects. The full Docker Compose
+platform remains the end-to-end development environment; the hosted showcase is deliberately a
+safe, zero-cost presentation surface.
+
+---
+
 ## Architecture
 
 ### Services

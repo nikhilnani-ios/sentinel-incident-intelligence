@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import { setSession } from "@/lib/auth";
 import type { Role } from "@/lib/types";
+import { showcaseEnabled } from "@/lib/showcase";
 
 const ROLES: { role: Role; description: string }[] = [
   { role: "VIEWER", description: "Read incidents, dashboards and topology" },
@@ -29,7 +30,7 @@ export default function LoginPage() {
       setSession(session.accessToken, role);
       router.replace("/");
     } catch {
-      setError("Could not reach the incident service. Is the stack running?");
+      setError(showcaseEnabled ? "Could not enter the showcase." : "Could not reach the incident service. Is the stack running?");
     } finally {
       setLoading(false);
     }
@@ -41,8 +42,9 @@ export default function LoginPage() {
         <div className="mb-8">
           <h1 className="font-display text-3xl tracking-tightest">SENTINEL</h1>
           <p className="mt-1 text-sm text-muted">
-            Pick a role to explore the platform. Tokens are issued by the development auth endpoint
-            and are not a production sign-in.
+            {showcaseEnabled
+              ? "Pick a role to explore a cost-free interactive portfolio dataset. No account or backend is required."
+              : "Pick a role to explore the platform. Tokens are issued by the development auth endpoint and are not a production sign-in."}
           </p>
         </div>
 

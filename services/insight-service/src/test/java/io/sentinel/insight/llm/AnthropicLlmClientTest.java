@@ -14,11 +14,7 @@ class AnthropicLlmClientTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AnthropicLlmClient client = new AnthropicLlmClient(
-            WebClient.builder(),
-            "test-key",
-            "http://localhost",
-            "test-model",
-            Duration.ofSeconds(1).toString());
+            WebClient.builder(), "test-key", "http://localhost", "test-model", Duration.ofSeconds(1).toString());
 
     @Test
     void parsesTextBlocksAndUsage() throws Exception {

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { clearSession, getRole, getToken } from "@/lib/auth";
 import { useIncidentStream } from "@/lib/useIncidentStream";
+import { showcaseEnabled } from "@/lib/showcase";
 
 const NAV = [
   { href: "/", label: "Overview" },
@@ -59,6 +60,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-4">
+            {showcaseEnabled && (
+              <span className="border border-medium/40 bg-medium/10 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-medium">
+                Portfolio showcase
+              </span>
+            )}
             <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
               <span className="relative flex h-2 w-2">
                 {connected && (

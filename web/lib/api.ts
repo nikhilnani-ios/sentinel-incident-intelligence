@@ -1,6 +1,10 @@
 "use client";
 
 import { getToken } from "./auth";
+import {
+  listShowcase, showcaseAnalysis, showcaseAnalytics, showcaseEnabled, showcaseIncident,
+  showcasePostmortem, showcaseTopology, transitionShowcase,
+} from "./showcase";
 import type {
   Analysis,
   AnalyticsOverview,
@@ -49,25 +53,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   listIncidents: (params: Record<string, string | undefined>) => {
+    if (showcaseEnabled) return Promise.resolve(listShowcase(params));
     const query = new URLSearchParams(
       Object.entries(params).filter(([, value]) => Boolean(value)) as [string, string][],
     );
     return request<Page<IncidentSummary>>(`/api/incidents?${query}`);
   },
 
-  incident: (id: string) => request<IncidentDetail>(`/api/incidents/${id}`),
+  incident: (id: string) => showcaseEnabled
+    ? Promise.resolve(showcaseIncident(id))
+    : request<IncidentDetail>(`/api/incidents/${id}`),
 
-  acknowledge: (id: string, note?: string) =>
-    request<IncidentSummary>(`/api/incidents/${id}/acknowledge`, {
+  acknowledge: (id: string, note?: string) => showcaseEnabled
+    ? Promise.resolve(transitionShowcase(id, "ACKNOWLEDGED", note))
+    : request<IncidentSummary>(`/api/incidents/${id}/acknowledge`, {
       method: "POST",
       body: JSON.stringify({ note: note ?? null }),
     }),
 
-  mitigate: (id: string) =>
-    request<IncidentSummary>(`/api/incidents/${id}/mitigate`, { method: "POST" }),
+  mitigate: (id: string) => showcaseEnabled
+    ? Promise.resolve(transitionShowcase(id, "MITIGATED"))
+    : request<IncidentSummary>(`/api/incidents/${id}/mitigate`, { method: "POST" }),
 
-  resolve: (id: string, resolutionSummary: string, resolutionCategory?: string) =>
-    request<IncidentSummary>(`/api/incidents/${id}/resolve`, {
+  resolve: (id: string, resolutionSummary: string, resolutionCategory?: string) => showcaseEnabled
+    ? Promise.resolve(transitionShowcase(id, "RESOLVED", resolutionSummary))
+    : request<IncidentSummary>(`/api/incidents/${id}/resolve`, {
       method: "POST",
       body: JSON.stringify({ resolutionSummary, resolutionCategory: resolutionCategory ?? null }),
     }),
@@ -78,21 +88,25 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
 
-  analyse: (id: string, force = false) =>
-    request<Analysis>(`/api/insight/${id}/analysis?force=${force}`, { method: "POST" }),
+  analyse: (id: string, force = false) => showcaseEnabled
+    ? Promise.resolve(showcaseAnalysis())
+    : request<Analysis>(`/api/insight/${id}/analysis?force=${force}`, { method: "POST" }),
 
-  postmortem: (id: string, force = false) =>
-    request<{ headline: string; markdown: string; model: string; generatedAt: string }>(
+  postmortem: (id: string, force = false) => showcaseEnabled
+    ? Promise.resolve({ headline: "Portfolio postmortem draft", markdown: showcasePostmortem(), model: "sentinel-demo-v1", generatedAt: new Date().toISOString() })
+    : request<{ headline: string; markdown: string; model: string; generatedAt: string }>(
       `/api/insight/${id}/postmortem?force=${force}`,
       { method: "POST" },
     ),
 
-  analytics: (window: string) =>
-    request<AnalyticsOverview>(`/api/analytics/overview?window=${window}`),
+  analytics: (window: string) => showcaseEnabled
+    ? Promise.resolve(showcaseAnalytics(window))
+    : request<AnalyticsOverview>(`/api/analytics/overview?window=${window}`),
 
-  topology: () => request<Topology>("/api/catalog/topology"),
+  topology: () => showcaseEnabled ? Promise.resolve(showcaseTopology) : request<Topology>("/api/catalog/topology"),
 
   login: async (email: string, tenantId: string, role: string) => {
+    if (showcaseEnabled) return { accessToken: `showcase-${email}`, role, tenantId };
     const response = await fetch("/api/auth/token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

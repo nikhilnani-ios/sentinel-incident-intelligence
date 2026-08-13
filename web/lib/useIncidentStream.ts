@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getToken } from "./auth";
 import type { IncidentEvent } from "./types";
+import { showcaseEnabled } from "./showcase";
 
 interface StreamState {
   connected: boolean;
@@ -26,6 +27,10 @@ export function useIncidentStream(onEvent?: (event: IncidentEvent) => void): Str
   handlerRef.current = onEvent;
 
   useEffect(() => {
+    if (showcaseEnabled) {
+      setState((previous) => ({ ...previous, connected: true }));
+      return;
+    }
     const token = getToken();
     if (!token) return;
 
