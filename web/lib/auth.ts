@@ -15,22 +15,22 @@ const ROLE_KEY = "sentinel.role";
  */
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY);
+  return window.sessionStorage.getItem(TOKEN_KEY);
 }
 
 export function getRole(): Role {
   if (typeof window === "undefined") return "VIEWER";
-  return (window.localStorage.getItem(ROLE_KEY) as Role) ?? "VIEWER";
+  return (window.sessionStorage.getItem(ROLE_KEY) as Role) ?? "VIEWER";
 }
 
 export function setSession(token: string, role: Role) {
-  window.localStorage.setItem(TOKEN_KEY, token);
-  window.localStorage.setItem(ROLE_KEY, role);
+  window.sessionStorage.setItem(TOKEN_KEY, token);
+  window.sessionStorage.setItem(ROLE_KEY, role);
 }
 
 export function clearSession() {
-  window.localStorage.removeItem(TOKEN_KEY);
-  window.localStorage.removeItem(ROLE_KEY);
+  window.sessionStorage.removeItem(TOKEN_KEY);
+  window.sessionStorage.removeItem(ROLE_KEY);
 }
 
 const RANK: Record<Role, number> = { VIEWER: 0, RESPONDER: 1, COMMANDER: 2, ADMIN: 3 };

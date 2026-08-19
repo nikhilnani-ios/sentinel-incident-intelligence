@@ -122,6 +122,8 @@ services:
     build:
       context: ./web
     environment:
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
       INCIDENT_API_URL: http://incident-service:8080
       INSIGHT_API_URL: http://insight-service:8080
     ports: ["3000:3000"]
