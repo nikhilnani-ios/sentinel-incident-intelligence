@@ -10,7 +10,7 @@
 > The hosted showcase uses synthetic browser-local data and requires no account, backend
 > infrastructure, database, model API key or paid service.
 
-Sentinel turns the raw noise emitted by a production system—alerts, metrics, error logs and
+Sentinel turns the raw noise emitted by a production system alerts, metrics, error logs and
 deployment events—into a small number of incidents that a human can actually investigate.
 
 A single failure in a payment service can trigger alerts across several services and teams. The
