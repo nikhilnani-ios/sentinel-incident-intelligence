@@ -108,12 +108,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Render kustomize output
-        run: kubectl kustomize deploy/k8s/base > /tmp/rendered.yaml
+        run: kubectl kustomize deploy/k8s/base > rendered.yaml
 
       - name: Validate against the API schema
         uses: instrumenta/kubeval-action@master
         with:
-          files: /tmp/rendered.yaml
+          files: rendered.yaml
 
   images:
     name: Build and push images
