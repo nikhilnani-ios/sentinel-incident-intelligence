@@ -1,148 +1,213 @@
 # Sentinel — Incident Intelligence & Reliability Platform
 
-Sentinel takes the raw noise a production system emits — alerts, metrics, error logs, deployment
-events — and turns it into a small number of incidents that a human can actually work.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Open_Sentinel-2f6b5c)](https://sentinel-incident-intelligence.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/)
+[![Kafka](https://img.shields.io/badge/Apache_Kafka-Event_Driven-black)](https://kafka.apache.org/)
 
-The problem it solves is the one every on-call engineer knows: a single failure in a payment
-service fires eleven alerts across four teams, and the first fifteen minutes of the response are
-spent working out that they are all the same thing. Sentinel does that correlation automatically,
-links the deployment that probably caused it, and drafts an explanation.
+**[Explore the live Sentinel showcase →](https://sentinel-incident-intelligence.vercel.app)**
 
+> The hosted showcase uses synthetic browser-local data and requires no account, backend
+> infrastructure, database, model API key or paid service.
+
+Sentinel turns the raw noise emitted by a production system—alerts, metrics, error logs and
+deployment events—into a small number of incidents that a human can actually investigate.
+
+A single failure in a payment service can trigger alerts across several services and teams. The
+first part of an incident is often spent discovering that those alerts share one cause. Sentinel
+correlates that evidence, maps the affected dependencies, identifies suspicious deployments and
+presents responders with an explainable incident timeline and an advisory root-cause analysis.
+
+## Why Sentinel is different
+
+- **Correlation instead of aggregation:** signals are scored using time, topology, severity and
+  shared labels rather than simply being placed in one dashboard.
+- **Topology-aware reasoning:** Sentinel understands which services call one another and uses those
+  relationships when grouping alerts and estimating impact.
+- **Human-centred automation:** suspected deployments and AI-generated hypotheses are advisory.
+  Sentinel puts evidence in front of responders without taking unsafe automatic action.
+- **Explainable decisions:** correlation scores, timelines, affected services and evidence remain
+  available for inspection after the incident.
+- **Built for incident response:** role-based commands, escalation, live updates, MTTA, MTTR and
+  service-level analytics are part of one workflow.
+- **Safe portfolio demonstration:** the public deployment runs entirely on synthetic browser-local
+  data, so visitors can explore it without credentials, infrastructure or model cost.
+- **Responsive interface:** the application supports desktop, tablet and mobile layouts.
+
+## Two ways to explore Sentinel
+
+### Hosted portfolio showcase
+
+The Vercel deployment is a responsive frontend-only demonstration built from the same pages and
+components as the platform UI. It uses seeded browser-local data to demonstrate:
+
+- incident filtering and investigation;
+- severity, status and escalation workflows;
+- service dependency topology;
+- deployment correlation;
+- incident timelines and operational evidence;
+- reliability analytics; and
+- curated root-cause analysis and postmortem output.
+
+Visitor changes stay in that visitor's browser. The showcase does not connect to PostgreSQL, Redis,
+Kafka or a model provider.
+
+### Full distributed platform
+
+The local Docker Compose environment runs the complete event-driven system: four Java services,
+Kafka, PostgreSQL, Redis, OpenTelemetry, Prometheus, Grafana and the Next.js web application.
+
+```mermaid
+flowchart LR
+    A["Alerts, metrics, logs and deployments"] --> B["Ingest service"]
+    B --> C["Kafka"]
+    C --> D["Correlation service"]
+    D --> E["Incident service"]
+    E --> F["SSE web application"]
+    E --> G["Insight service"]
+    G --> H["Root-cause analysis"]
 ```
-alerts ─┐
-metrics ├─► ingest ─► Kafka ─► correlation ─► incident ─► SSE ─► browser
-logs   ─┤   (dedup,          (graph-aware   (commands,
-deploys ┘   rate limit)       scoring)       escalation)
-                                  │
-                                  └─► insight (LLM root cause + postmortem)
-```
 
----
+## Core capabilities
 
-## What it actually does
+### Correlation
 
-**Correlates instead of aggregating.** Two alerts belong to the same incident when they are close in
-the service dependency graph, close in time, similar in severity, and share labels. Each factor is
-scored independently and combined with tunable weights; the combined score is stored on the signal,
-so every correlation decision can be explained after the fact rather than trusted blindly.
+Two alerts belong to the same incident when they are close in the service dependency graph, close
+in time, similar in severity and share relevant labels. Each factor is scored independently and
+combined using configurable weights. The combined score is stored with the signal so a correlation
+decision can be explained later.
 
-**Knows the topology.** The service graph is a first-class object. Correlation walks it with a
-best-first search that maximises the product of edge criticalities, which means an alert on
-`checkout-api` and one on `orders-postgres` correlate strongly if there is a critical path between
-them, and not at all if there is not.
+### Service topology
 
-**Deduplicates properly.** Fingerprints are SHA-256 over the semantic content of a signal with
-volatile labels stripped — pod name, instance id, trace id — and numbers and UUIDs normalised out of
-log messages. A pod restart loop across forty pods is one signal, not forty.
+The service graph is a first-class platform object. Correlation traverses the graph to determine
+whether alerts from different services have a meaningful dependency path between them. The UI
+shows callers, downstream dependencies and the incident-specific topology.
 
-**Correlates deployments.** Suspicion is scored from recency and graph proximity to the affected
-service, weighted by whether the deploy succeeded, failed, or rolled back. It surfaces the top
-suspects and explicitly does **not** trigger an automatic rollback — the platform's job is to put the
-right information in front of a human quickly.
+### Deduplication
 
-**Escalates.** Unacknowledged incidents climb their policy's ladder. The sweep uses
-`FOR UPDATE SKIP LOCKED`, so every replica can run it concurrently, take a disjoint batch, and never
-page the same person twice — no leader election, no distributed lock.
+Signal fingerprints are calculated from semantic content after volatile values such as pod names,
+instance IDs and trace IDs are removed. UUIDs and changing numeric values in messages are
+normalised, allowing repeated alerts from many replicas to collapse into one signal.
 
-**Explains.** The insight service assembles the incident's evidence and asks a model for calibrated
-hypotheses with likelihood scores and a next step for each. Output is advisory, labelled with its
-confidence and the model that produced it, and nothing in the platform acts on it automatically.
+### Deployment correlation
 
-**Streams.** Incident changes reach the browser over SSE within a few hundred milliseconds, fanned
-out across replicas via Kafka.
+Sentinel scores deployment suspicion using recency, graph proximity and deployment outcome. It
+surfaces likely suspects with supporting rationale but deliberately does not perform an automatic
+rollback.
 
----
+### Escalation and incident commands
 
-## Quick start
+Incidents can be acknowledged, mitigated, resolved and escalated according to role and policy.
+Timeline entries form an append-only record of important actions and state transitions.
 
-Prerequisites: Docker Desktop (or Docker Engine with Compose v2), GNU Make, Python 3, and at least
-8 GB of memory available to Docker. Java, Maven, Node, Postgres, Redis and Kafka do not need to be
-installed on the host for the containerised quick start.
+### Advisory incident intelligence
+
+The insight service assembles incident evidence and produces calibrated root-cause hypotheses,
+confidence, reasoning and suggested next steps. The analysis is explicitly advisory and the
+platform never acts on it automatically.
+
+### Live browser updates
+
+Incident changes reach the web application through Server-Sent Events. Kafka distributes updates
+between service replicas, while SSE provides automatic browser reconnection using standard HTTP
+semantics.
+
+## Technology stack
+
+| Area | Technologies |
+| --- | --- |
+| Web | Next.js 16 App Router, React, TypeScript, Tailwind CSS |
+| Services | Java 21, Spring Boot, Spring Security, Spring Data JPA |
+| Messaging | Apache Kafka |
+| Persistence | PostgreSQL, Flyway |
+| Caching and control | Redis |
+| Live updates | Server-Sent Events |
+| Observability | OpenTelemetry, Prometheus, Grafana |
+| Local orchestration | Docker, Docker Compose, GNU Make |
+| Infrastructure templates | Kubernetes, Kustomize, Terraform, AWS |
+| Hosted showcase | Vercel |
+
+## Quick start: full platform
+
+### Prerequisites
+
+- Docker Desktop, or Docker Engine with Compose v2;
+- GNU Make;
+- Python 3 for the scenario scripts; and
+- at least 8 GB of memory available to Docker.
+
+Java, Maven, Node.js, PostgreSQL, Redis and Kafka do not need to be installed on the host for the
+containerised quick start.
 
 ```bash
-cd iip
-make doctor             # verify Docker, Compose and the demo-script runtime
-make up                 # postgres, redis, kafka, four services, web, prometheus, grafana
-make seed               # fire a realistic cascading failure at the stack
-open http://localhost:3000
+git clone https://github.com/nikhilnani-ios/sentinel-incident-intelligence.git
+cd sentinel-incident-intelligence
+
+make doctor
+make up
+make seed
 ```
 
-On Linux use `xdg-open http://localhost:3000`, or open the URL manually. The first image build can
-take several minutes. Wait until `docker compose ps` reports the services as running/healthy before
-seeding. Sign in with the prefilled `sre@acme.io`, tenant `acme`, and the `COMMANDER` role. The seed
-script obtains its own local JWT; no token or model key is required.
+Wait until `docker compose ps` reports the required services as running or healthy, then open:
 
-`make seed` ships a bad `payment-gateway` deploy, then degrades `checkout-api` and `edge-gateway`
-behind it. You should get **one** incident spanning three services, with the deployment linked as the
-top suspect — not three separate pages.
+```text
+http://localhost:3000
+```
 
-`make storm` does the opposite: hundreds of flapping signals that should collapse into a handful of
-incidents, which is how you see deduplication and rate limiting working.
+Sign in using the prefilled `sre@acme.io` account and select the `COMMANDER` role. The local
+development API scopes the session to the `acme` demo tenant automatically.
+
+`make seed` simulates a bad `payment-gateway` deployment and then degrades `checkout-api` and
+`edge-gateway`. The expected outcome is one incident spanning the related services, with the
+deployment linked as a likely suspect—not three unrelated pages.
+
+`make storm` generates a larger set of flapping signals to demonstrate deduplication and rate
+limiting.
 
 | Surface | URL |
 | --- | --- |
-| Web app | http://localhost:3000 |
+| Web application | http://localhost:3000 |
 | Grafana | http://localhost:3001 |
 | Prometheus | http://localhost:9090 |
 | Ingest API | http://localhost:8081 |
-| Incident API + OpenAPI | http://localhost:8083/docs |
+| Incident API | http://localhost:8083 |
 
-No API key is needed. `INSIGHT_MODE=demo` is the default: it returns a curated, deterministic
-analysis through the real context, parsing, persistence and UI pipeline without making an external
-request. The UI labels this output **Demo analysis**, and disables regeneration once it is stored so
-public visitors cannot create model costs.
+## Insight modes
 
-The available modes are:
+No model API key is required for the default local demonstration.
 
 | `INSIGHT_MODE` | Intended use | External cost |
 | --- | --- | --- |
 | `demo` | Public portfolio and local product demonstration | None |
-| `stub` | Explicit failure/empty-provider testing | None |
-| `anthropic` | Private live model evaluation | Usage-based |
+| `stub` | Failure and empty-provider testing | None |
+| `anthropic` | Private live-model evaluation | Usage-based |
 
-### Enable real root-cause analysis
+In `demo` mode, Sentinel returns curated deterministic analysis through the context, parsing,
+persistence and UI pipeline without making an external model request. The UI identifies this output
+as demo analysis.
 
-For private testing only, create a local environment file from the checked-in template, change
-`INSIGHT_MODE` to `anthropic`, and add an Anthropic API key. Never commit the populated file; `.env`
-is ignored by Git.
+### Enable private live-model analysis
+
+For private testing, create a local environment file and intentionally enable the provider mode:
 
 ```bash
 cp .env.example .env
-# Edit .env: set INSIGHT_MODE=anthropic and ANTHROPIC_API_KEY, then recreate the service:
+# Set INSIGHT_MODE=anthropic and ANTHROPIC_API_KEY in .env
 docker compose up -d --build --force-recreate insight-service
 docker compose ps insight-service
 ```
 
-The default model is the pinned `claude-sonnet-4-20250514` snapshot. Pinning makes repeated analyses
-and incident audits reproducible; change `INSIGHT_MODEL` in `.env` only as an intentional model
-upgrade. Open an incident and choose **Analyse** or **Regenerate** after the service is healthy. The
-generated result records the model and token usage, while the deterministic stub remains available
-when Anthropic mode is selected without a key. Return to `INSIGHT_MODE=demo` and remove the key before
-publishing a portfolio deployment.
+Never commit a populated `.env` file or provider credential. Return to `INSIGHT_MODE=demo` and
+remove the key before publishing a portfolio deployment.
 
-If analysis fails, inspect only the insight service first:
+If analysis fails:
 
 ```bash
 docker compose logs --tail=200 insight-service
 curl -i http://localhost:8084/actuator/health
 ```
 
-If the stack was started before a configuration change, run `make down && make up`. If database or
-Kafka state is incompatible with the current code, `make reset && make up` recreates the local
-volumes (and intentionally deletes local demo data). Use `make logs` for application logs and
-`docker compose logs kafka postgres redis` for infrastructure startup failures.
-
----
-
-## Free portfolio showcase
-
-The repository also ships a frontend-only showcase for free personal hosting. It uses the same
-pages and components as the live platform, with seeded browser-local data replacing network calls.
-Visitors can filter incidents, inspect the dependency graph, run the incident workflow and view the
-curated RCA/postmortem. Their changes stay in their own browser and no database, Kafka cluster,
-secret or model API is involved.
-
-Run it locally:
+## Run the frontend showcase locally
 
 ```bash
 cd web
@@ -151,204 +216,183 @@ npm ci
 npm run dev
 ```
 
-Deploy it from this monorepo on Vercel:
+Then open `http://localhost:3000`.
+
+To deploy the showcase from this monorepo on Vercel:
 
 1. Import the GitHub repository.
-2. Set **Root Directory** to `web`.
+2. Set the project **Root Directory** to `web`.
 3. Keep the detected Next.js build settings.
-4. Add `NEXT_PUBLIC_SHOWCASE_MODE=true` for Production, Preview and Development.
-5. Deploy. Do not add database, JWT or model-provider secrets to this frontend project.
+4. Add `NEXT_PUBLIC_SHOWCASE_MODE=true` to Production, Preview and Development.
+5. Deploy without database, JWT or model-provider secrets.
 
-Vercel's Hobby plan is intended for personal, non-commercial projects. The full Docker Compose
-platform remains the end-to-end development environment; the hosted showcase is deliberately a
-safe, zero-cost presentation surface.
-
----
-
-## Architecture
-
-### Services
+## Service architecture
 
 | Service | Port | Responsibility |
-| --- | --- | --- |
-| `ingest-service` | 8081 | Validation, idempotency, rate limiting, publish to Kafka |
-| `correlation-service` | 8082 | Dedup, graph-aware scoring, incident creation, deployment linking |
-| `incident-service` | 8083 | Commands, queries, RBAC, SSE fan-out, escalation, analytics |
-| `insight-service` | 8084 | LLM root cause analysis and postmortem drafting |
+| --- | ---: | --- |
+| `ingest-service` | 8081 | Validation, idempotency, rate limiting and Kafka publication |
+| `correlation-service` | 8082 | Deduplication, topology-aware scoring, incident creation and deployment linking |
+| `incident-service` | 8083 | Commands, queries, RBAC, SSE fan-out, escalation and analytics |
+| `insight-service` | 8084 | Root-cause analysis and postmortem drafting |
 
-Shared code lives in two library modules: `platform-common` (event contracts, Kafka config, security,
-error handling) and `platform-domain` (JPA entities, repositories, Flyway migrations).
+Shared code lives in two library modules:
+
+- `platform-common`: event contracts, Kafka configuration, security and error handling;
+- `platform-domain`: entities, repositories and Flyway migrations.
 
 ### Why these boundaries
 
-The split follows failure domains and scaling profiles, not org-chart tidiness:
+The services are separated by failure domain and scaling profile:
 
-- **Ingest is the only internet-facing service** and the only one that must never lose data under
-  load. It does no database work at all — validate, dedupe, publish, return `202`. It scales to 20
-  replicas independently of everything else.
-- **Correlation is CPU-bound and stateful-ish.** It holds a cached service graph and does the
-  scoring. It is the one service where a slow query directly delays incident creation.
-- **Incident is request/response and holds the long-lived SSE connections.** Its scaling driver is
-  concurrent browsers, which has nothing to do with signal volume.
-- **Insight can be completely down without affecting incident response.** That is the point of
-  separating it: a model provider outage degrades one panel in the UI, not the pipeline.
+- **Ingest** handles the write-heavy external signal path and scales with incoming event volume.
+- **Correlation** performs graph traversal and scoring, and scales with correlation workload.
+- **Incident** handles request/response traffic and long-lived SSE connections, scaling with active
+  users and incident operations.
+- **Insight** is isolated so a model-provider failure degrades the analysis panel without preventing
+  incident response.
 
-### Deliberate trade-offs
+## Deliberate engineering trade-offs
 
-Where a simpler choice was made, it was made on purpose:
+### Shared incident schema
 
-**Shared schema between correlation and incident.** Both services read and write the same `incident`
-tables. Splitting them into separate databases would be textbook microservices, and would mean
-either distributed transactions or eventual consistency on a record two services mutate within
-seconds of each other. Instead they share one bounded context and both deploy identical migrations,
-so the schema cannot drift. Insight owns its own concerns and only reads.
+Correlation and incident operations share one bounded context and database schema. Separating the
+tables across databases would require distributed transactions or eventual consistency for records
+that both services update within seconds.
 
-**Publish-after-commit, not transactional outbox.** Incident events go to Kafka in a
-`TransactionSynchronization` after commit. A crash in the window between commit and publish loses the
-event — the incident is durable, the notification is not. A full outbox with a relay is the correct
-answer at higher stakes; it is documented in `IncidentEventPublisher` rather than silently omitted.
+### Publish after commit
 
-**SSE over WebSockets.** Traffic is strictly server-to-client. SSE gives automatic browser
-reconnection, plain HTTP semantics through load balancers, and no protocol upgrade to configure.
+Incident events are published after the database transaction commits. This keeps the implementation
+direct, while accepting a small failure window between commit and publication. A transactional
+outbox would be the appropriate evolution for a higher-stakes production environment.
 
-**Polling escalation, not per-incident timers.** A million in-flight timers is a memory leak that
-also does not survive a restart. A query against a partial index is cheap and stateless.
+### SSE instead of WebSockets
 
-**Token in the query string for SSE.** `EventSource` cannot set headers. The tokens are short-lived
-and tenant-scoped; the alternative (a cookie) drags CSRF back into a stateless API. This is a real
-trade-off, noted in `StreamController` and here rather than buried.
+Traffic is server-to-client, making SSE a simpler fit with automatic browser reconnection and
+ordinary HTTP proxy behavior.
 
-**Correlation is tuned, not learned.** The scoring weights are configuration, not a model. A
-tunable function whose output can be explained line by line beats a classifier nobody can debug at
-3am — and there is no labelled incident data to train on anyway.
+### Polling escalation
 
-### Reliability mechanics
+Escalation uses a stateless database sweep rather than maintaining one in-memory timer per incident.
+This survives restarts and avoids unbounded timer state.
 
-- **Retry and DLQ.** Consumers use `DefaultErrorHandler` with exponential backoff (1s → 30s, five
-  attempts) and a `DeadLetterPublishingRecoverer`. Deserialization and validation failures are
-  classified non-retryable and go straight to the DLQ — retrying a malformed message five times just
-  delays the inevitable.
-- **Idempotency.** Producers are idempotent with `acks=all`. Ingest holds a Redis `SET NX` claim per
-  event id over a six-hour window and releases it if publishing fails, so a retry after a failed
-  publish is not swallowed as a duplicate.
-- **Rate limiting.** A Redis Lua token bucket, evaluated atomically. It fails **open**: if Redis is
-  unreachable, signals are accepted. Dropping incident data to protect a rate limiter is the wrong
-  trade for this system.
-- **Optimistic locking** on the incident aggregate, with `PESSIMISTIC_WRITE` on the correlation path
-  where two signals can race to attach to the same incident.
-- **Circuit breaker** around the model API. When analysis is degraded the correct behaviour is to
-  fail fast, not to queue requests behind a provider outage during a live incident.
-- **Content-hashed analysis.** Regeneration is skipped when the evidence has not changed, so
-  refreshing an incident page costs nothing.
+### Tuned correlation rather than learned correlation
 
-### Data model
+Correlation weights are configuration rather than a trained classifier. The system can explain
+each score, and it does not assume the existence of a large labelled incident dataset.
 
-`incident` is the aggregate root. `incident_signal` holds correlated signals with their scores,
-`timeline_entry` is an append-only audit log, `incident_deployment` links suspects with their
-rationale. Topology is `service_node` plus `service_dependency`. Schema is versioned with Flyway;
-`V2` seeds a twelve-service demo topology so the platform is useful the moment it starts.
+## Reliability mechanics
 
----
+- Kafka consumers use bounded retry and dead-letter handling.
+- Producers use idempotent publication with acknowledgement from all required replicas.
+- Redis claims suppress duplicate signal IDs within a configured window.
+- Rate limiting uses an atomic Redis token-bucket operation.
+- Incidents use optimistic locking, with stronger locking on race-prone correlation paths.
+- The model-provider integration is protected by a circuit breaker.
+- Analysis is content-hashed so unchanged evidence can reuse a stored result.
+
+## Data model
+
+`incident` is the aggregate root. Related records include:
+
+- `incident_signal`: correlated signals and their scores;
+- `timeline_entry`: append-only incident history;
+- `incident_deployment`: deployment suspects and supporting rationale;
+- `service_node`: catalogued services; and
+- `service_dependency`: directed topology edges.
+
+Database changes are versioned with Flyway, and the demo migration seeds a representative service
+topology.
 
 ## Security
 
-- Stateless JWT with a role hierarchy: `VIEWER → RESPONDER → COMMANDER → ADMIN`. Reading is open to
-  viewers, acknowledging needs a responder, resolving and declaring duplicates need a commander,
-  editing the catalog needs an admin.
-- Every query is tenant-scoped at the repository level. An incident from another tenant returns 404,
-  not 403 — the existence of the record is not disclosed.
-- Containers run non-root with a read-only root filesystem and all capabilities dropped.
-  NetworkPolicy is default-deny with explicit allows.
-- The dev token endpoint (`/v1/auth/token`) is `@Profile({"local","demo"})` and simply does not exist
-  in the production context.
+- Stateless JWT authentication with the role hierarchy
+  `VIEWER → RESPONDER → COMMANDER → ADMIN`.
+- Tenant-scoped repository queries prevent cross-tenant incident access.
+- Protected records return a non-disclosing response rather than revealing their existence.
+- Service containers are configured to run as non-root users.
+- The local development token endpoint is limited to local/demo profiles.
 
-**Known scope boundary:** the web app stores its token in `localStorage`, which is appropriate for a
-dev auth endpoint issuing short-lived tokens and would be replaced by an httpOnly cookie and a real
-identity provider in production.
+### Authentication scope boundary
 
----
+The local development web application stores its short-lived token in `sessionStorage`, so closing
+the browser tab ends the session. A production deployment would replace the development token flow
+with a real identity provider and an httpOnly, secure cookie.
+
+The public Vercel showcase does not authenticate against the backend and does not expose production
+credentials or infrastructure.
 
 ## Observability
 
-Every service exports OpenTelemetry traces and Prometheus metrics. The collector applies tail-based
-sampling — every error and every request over a second is kept, the rest sampled at 10%, because
-traces of fast successful requests are the ones nobody opens.
+Services export OpenTelemetry traces and Prometheus metrics. Provisioned Grafana dashboards cover:
 
-Two Grafana dashboards ship provisioned:
+- pipeline throughput, correlation outcomes, consumer lag, DLQ depth and analysis latency; and
+- reliability outcomes such as MTTA, MTTR, escalations and incidents by severity.
 
-- **Pipeline health** — throughput, correlation outcome mix, consumer lag, DLQ depth, analysis
-  latency and cache hit rate.
-- **Reliability outcomes** — MTTA and MTTR at p50 and p95, escalations by level, incidents by
-  severity.
-
-Prometheus rules in `deploy/observability/alert-rules.yml` watch the platform itself and fire into
-its own Alertmanager webhook. Sentinel raises incidents about Sentinel.
-
----
+The repository also includes alerting rules for monitoring Sentinel's own pipeline.
 
 ## Testing
 
 ```bash
-make test        # services
-make test-web    # typecheck and lint
+make test
+make test-web
 ```
 
-Tests concentrate on the logic that is genuinely hard to get right and expensive to get wrong:
+The tests focus on behavior that is difficult or costly to get wrong:
 
-- `ServiceGraphTest` — traversal with cycles, depth limits, weak-edge pruning
-- `CorrelationScorerTest` — adjacency correlation, time-decay half-life, label mismatch rejection
-- `FingerprintsTest` — volatile-label stripping and message normalisation
-- `EscalationServiceTest` — cumulative ladder delays, severity floors, exhausted policies
-- `RcaResponseParserTest` — malformed model output degrading instead of throwing
-- `SignalIngestServiceTest` — replay suppression and claim release on publish failure
+- traversal of cyclic service graphs;
+- topology-aware correlation and time decay;
+- volatile-label stripping and fingerprint normalisation;
+- escalation policy timing;
+- malformed analysis output;
+- replay suppression and failed-publication recovery; and
+- frontend type checking and linting.
 
-Behaviour is asserted, not implementation. Every test name is a sentence describing a rule.
-
----
-
-## Deployment
-
-`deploy/k8s` is a kustomize base plus a production overlay: HPAs driven by CPU with an asymmetric
-scale-up policy (signal volume arrives in bursts), PodDisruptionBudgets, topology spread across
-zones, and a `preStop` sleep so the load balancer deregisters before the JVM starts shutting down.
-
-No CPU limits are set — throttling a JVM under a traffic spike is exactly the wrong behaviour for a
-service whose job is to keep up during an incident. Memory limits are set.
-
-`deploy/terraform` provisions the AWS footprint: three-AZ VPC, Multi-AZ RDS Postgres with PITR,
-ElastiCache Redis with automatic failover, MSK with `min.insync.replicas=2` and unclean leader
-election disabled, and EKS. State is remote with DynamoDB locking.
-
-CI runs formatting, tests, typecheck, a Trivy scan gated on fixable HIGH/CRITICAL findings, and
-manifest validation before building images.
-
----
-
-## Building from source
-
-The build needs access to Maven Central and the npm registry:
+Build individual components directly with:
 
 ```bash
-cd services && mvn verify     # Java 21
-cd web && npm ci && npm run build
+cd services && mvn verify
+cd ../web && npm ci && npm run lint && npm run build
 ```
 
----
+## Deployment assets
+
+The repository includes infrastructure definitions for evolving the local platform into a
+production deployment:
+
+- `deploy/k8s`: Kustomize base and production overlay;
+- `deploy/terraform`: AWS network, database, cache, Kafka and Kubernetes infrastructure; and
+- `deploy/observability`: collector configuration, Prometheus rules and Grafana dashboards.
+
+These assets represent the platform's production deployment design. Review and adapt environment,
+security, scaling and cost parameters before using them outside a portfolio or development setting.
 
 ## Repository layout
 
-```
+```text
 services/
-  platform-common/       event contracts, Kafka config, security, errors
-  platform-domain/       entities, repositories, Flyway migrations
-  ingest-service/        validation, idempotency, rate limiting
-  correlation-service/   graph, scoring, incident creation
-  incident-service/      commands, queries, SSE, escalation, analytics
-  insight-service/       LLM analysis and postmortems
-web/                     Next.js 14 app router, TypeScript, Tailwind
+  platform-common/       Event contracts, Kafka configuration, security and errors
+  platform-domain/       Entities, repositories and Flyway migrations
+  ingest-service/        Validation, idempotency and rate limiting
+  correlation-service/   Graph traversal, scoring and incident creation
+  incident-service/      Commands, queries, SSE, escalation and analytics
+  insight-service/       Root-cause analysis and postmortems
+web/                     Next.js 16 App Router, React, TypeScript and Tailwind CSS
 deploy/
-  k8s/                   kustomize base and production overlay
-  terraform/             AWS: VPC, RDS, ElastiCache, MSK, EKS
-  observability/         collector, Prometheus rules, Grafana dashboards
-scripts/simulate.py      cascade and storm scenario generators
+  k8s/                   Kustomize base and production overlay
+  terraform/             AWS infrastructure definitions
+  observability/         OpenTelemetry, Prometheus and Grafana configuration
+scripts/simulate.py      Cascade and storm scenario generators
 ```
+
+## Project status
+
+Sentinel is a portfolio and engineering demonstration project. The hosted application uses
+synthetic data; the complete distributed platform is intended for local development and architecture
+exploration rather than production incident management without further security and operational
+hardening.
+
+## Feedback
+
+Questions, feedback and architecture discussions are welcome. Open an issue in this repository or
+connect with me through the profile linked to this GitHub account.
+
