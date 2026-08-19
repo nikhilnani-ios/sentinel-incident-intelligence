@@ -32,3 +32,6 @@ next-env.d.ts
 
 # Logs
 *.log
+
+sentinel-web-current.zip
+web.backup/
