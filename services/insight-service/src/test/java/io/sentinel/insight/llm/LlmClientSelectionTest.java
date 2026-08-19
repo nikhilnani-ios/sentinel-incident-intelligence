@@ -39,8 +39,7 @@ class LlmClientSelectionTest {
     @Test
     void anthropicRequiresBothModeAndKey() {
         contextRunner
-                .withPropertyValues(
-                        "sentinel.insight.mode=anthropic", "sentinel.insight.anthropic.api-key=test-key")
+                .withPropertyValues("sentinel.insight.mode=anthropic", "sentinel.insight.anthropic.api-key=test-key")
                 .run(context -> {
                     assertThat(context).hasSingleBean(LlmClient.class);
                     assertThat(context.getBean(LlmClient.class)).isInstanceOf(AnthropicLlmClient.class);
