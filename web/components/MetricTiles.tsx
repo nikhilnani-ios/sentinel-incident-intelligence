@@ -26,9 +26,9 @@ export function MetricTiles({ overview, openCount }: { overview: AnalyticsOvervi
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {tiles.map((tile) => (
-        <div key={tile.label} className="panel px-4 py-3">
+        <div key={tile.label} className="panel min-w-0 px-3 py-3 sm:px-4">
           <p className="label">{tile.label}</p>
           <p className={`stat mt-1 ${tile.tone}`}>{tile.value}</p>
           {tile.hint && <p className="mt-0.5 text-[10px] text-muted/70">{tile.hint}</p>}

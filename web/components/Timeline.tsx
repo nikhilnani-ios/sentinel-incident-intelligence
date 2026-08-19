@@ -19,14 +19,14 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
     <ol className="relative space-y-0">
       <span className="absolute left-[5px] top-2 bottom-2 w-px bg-ink-700" aria-hidden />
       {entries.map((entry) => (
-        <li key={entry.id} className="relative flex gap-3 py-2 pl-5">
+        <li key={entry.id} className="relative flex flex-col gap-1 py-2 pl-5 sm:flex-row sm:gap-3">
           <span
             className={`absolute left-0 top-3.5 h-[11px] w-[11px] rounded-full border-2 border-ink-900 ${
               KIND_COLOR[entry.kind] ?? "bg-ink-600"
             }`}
             aria-hidden
           />
-          <time className="w-16 shrink-0 font-mono text-[11px] text-muted tabular">{clock(entry.occurredAt)}</time>
+          <time className="w-auto shrink-0 font-mono text-[11px] text-muted tabular sm:w-16">{clock(entry.occurredAt)}</time>
           <div className="min-w-0 flex-1">
             <p className="text-sm text-paper">{entry.message}</p>
             <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted">

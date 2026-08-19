@@ -69,9 +69,10 @@ export function DependencyGraph({ nodes }: { nodes: GraphNode[] }) {
   const nodeHeight = 38;
 
   return (
+    <div className="max-w-full overflow-x-auto pb-2">
     <svg
       viewBox={`0 0 ${layout.width} ${layout.height}`}
-      className="w-full"
+      className="min-w-[520px] w-full"
       role="img"
       aria-label="Service dependency graph"
     >
@@ -148,5 +149,6 @@ export function DependencyGraph({ nodes }: { nodes: GraphNode[] }) {
         );
       })}
     </svg>
+    </div>
   );
 }

@@ -74,7 +74,7 @@ export default function IncidentDetailPage() {
               </span>
             )}
           </div>
-          <h1 className="mt-1 font-display text-2xl tracking-tightest">{summary.title}</h1>
+          <h1 className="mt-1 break-words font-display text-xl tracking-tightest sm:text-2xl">{summary.title}</h1>
           <p className="mt-1 font-mono text-[11px] text-muted">
             {summary.primaryServiceKey} · detected {dayAndClock(summary.detectedAt)} ·{" "}
             {open ? `open ${since(summary.detectedAt)}` : `resolved in ${duration(
@@ -198,7 +198,7 @@ export default function IncidentDetailPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-ink-700 pt-4">
+              <div className="flex flex-col-reverse gap-2 border-t border-ink-700 pt-4 sm:flex-row sm:justify-end">
                 <Button type="button" disabled={busy} onClick={() => setDialog(null)}>
                   Cancel
                 </Button>

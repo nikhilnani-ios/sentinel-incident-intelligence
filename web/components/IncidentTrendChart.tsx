@@ -38,7 +38,7 @@ export function IncidentTrendChart({ buckets }: { buckets: AnalyticsBucket[] }) 
     <div className="w-full">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="h-[220px] w-full"
+        className="h-auto min-h-[180px] w-full sm:h-[220px]"
         role="img"
         aria-label="Incident frequency and mean time to resolve"
       >
@@ -126,7 +126,7 @@ export function IncidentTrendChart({ buckets }: { buckets: AnalyticsBucket[] }) 
         })}
       </svg>
 
-      <div className="mt-2 flex gap-5 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
+      <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
         <span><i className="mr-1.5 inline-block h-2 w-2 bg-ink-600" />Incidents</span>
         <span><i className="mr-1.5 inline-block h-2 w-2 bg-critical" />Critical</span>
         <span><i className="mr-1.5 inline-block h-0.5 w-3 bg-trace align-middle" />MTTR</span>

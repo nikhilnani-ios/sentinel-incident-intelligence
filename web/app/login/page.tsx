@@ -37,7 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
+    <div className="flex min-h-[100dvh] items-center justify-center px-4 py-8 sm:px-6">
       <div className="w-full max-w-md">
         <div className="mb-8">
           <h1 className="font-display text-3xl tracking-tightest">SENTINEL</h1>
@@ -48,7 +48,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="panel p-5">
+        <div className="panel p-4 sm:p-5">
           <label className="label mb-1.5 block" htmlFor="email">
             Email
           </label>
@@ -65,7 +65,7 @@ export default function LoginPage() {
               <button
                 key={option.role}
                 onClick={() => setRole(option.role)}
-                className={`flex w-full flex-col items-start rounded-sm border px-3 py-2 text-left transition-colors ${
+                className={`flex min-h-14 w-full flex-col items-start justify-center rounded-sm border px-3 py-2 text-left transition-colors ${
                   role === option.role
                     ? "border-trace/50 bg-trace/10"
                     : "border-ink-700 hover:border-ink-600"

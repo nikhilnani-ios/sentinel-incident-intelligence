@@ -18,6 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState<string>("VIEWER");
+  const [menuOpen, setMenuOpen] = useState(false);
   const { connected } = useIncidentStream();
 
   useEffect(() => {
@@ -35,13 +36,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 border-b border-ink-700 bg-ink-900/85 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-8 px-6 py-3">
+        <div className="mx-auto max-w-[1400px] px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-4 lg:gap-8">
           <Link href="/" className="flex items-baseline gap-2">
             <span className="font-display text-lg tracking-tightest text-paper">SENTINEL</span>
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">reliability</span>
           </Link>
 
-          <nav className="flex gap-1">
+          <nav className="hidden gap-1 md:flex">
             {NAV.map((item) => {
               const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
@@ -59,9 +61,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-3 sm:gap-4">
             {showcaseEnabled && (
-              <span className="border border-medium/40 bg-medium/10 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-medium">
+              <span className="hidden border border-medium/40 bg-medium/10 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-medium lg:inline">
                 Portfolio showcase
               </span>
             )}
@@ -76,21 +78,54 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
               {connected ? "live" : "reconnecting"}
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{role}</span>
+            <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-muted sm:inline">{role}</span>
             <button
               onClick={() => {
                 clearSession();
                 router.replace("/login");
               }}
-              className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted hover:text-paper"
+              className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-muted hover:text-paper md:block"
             >
               Sign out
             </button>
+            <button
+              type="button"
+              aria-label="Toggle navigation"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="grid h-10 w-10 place-items-center rounded-sm border border-ink-700 text-paper md:hidden"
+            >
+              <span className="font-mono text-lg leading-none">{menuOpen ? "×" : "☰"}</span>
+            </button>
           </div>
+          </div>
+          {menuOpen && (
+            <div className="mt-3 border-t border-ink-700 pt-3 md:hidden">
+              <nav className="grid gap-1">
+                {NAV.map((item) => {
+                  const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                  return (
+                    <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={clsx(
+                      "rounded-sm px-3 py-2.5 font-mono text-xs uppercase tracking-[0.12em]",
+                      active ? "bg-ink-700 text-paper" : "text-muted",
+                    )}>
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className="mt-2 flex items-center justify-between border-t border-ink-700 px-3 pt-3">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{role}</span>
+                <button onClick={() => { clearSession(); router.replace("/login"); }} className="min-h-10 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                  Sign out
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1400px] px-6 py-6">{children}</main>
+      <main className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6 sm:py-6">{children}</main>
     </div>
   );
 }

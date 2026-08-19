@@ -52,17 +52,17 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-2xl tracking-tightest">Reliability overview</h1>
           <p className="text-sm text-muted">Everything currently burning, and how the last few weeks have gone.</p>
         </div>
-        <div className="flex gap-1">
+        <div className="flex max-w-full gap-1 overflow-x-auto pb-1 sm:pb-0">
           {WINDOWS.map((option) => (
             <button
               key={option}
               onClick={() => setWindow(option)}
-              className={`rounded-sm border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
+              className={`shrink-0 rounded-sm border px-2.5 py-2 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
                 window === option
                   ? "border-trace/50 bg-trace/10 text-trace"
                   : "border-ink-700 text-muted hover:text-paper"
@@ -108,7 +108,8 @@ export default function OverviewPage() {
         {worstServices.length === 0 ? (
           <Empty message="No incidents recorded in this window" />
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="min-w-[620px] w-full">
             <thead>
               <tr className="border-b border-ink-700">
                 {["Service", "Incidents", "Critical incidents", "MTTA", "MTTR"].map((heading, index) => (
@@ -139,6 +140,7 @@ export default function OverviewPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Panel>
     </div>

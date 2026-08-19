@@ -119,7 +119,7 @@ export function AnalysisPanel({
             <ul className="space-y-3">
               {analysis.hypotheses.map((hypothesis, index) => (
                 <li key={index} className="border-l-2 border-ink-600 pl-3">
-                  <div className="flex items-baseline justify-between gap-3">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
                     <p className="text-sm font-medium text-paper">{hypothesis.cause}</p>
                     <span className="shrink-0 font-mono text-[10px] text-muted tabular">
                       {(hypothesis.likelihood * 100).toFixed(0)}%

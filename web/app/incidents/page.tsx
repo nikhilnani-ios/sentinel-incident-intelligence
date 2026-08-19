@@ -50,7 +50,7 @@ export default function IncidentsPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-4">
+      <div className="grid gap-3">
         <FilterGroup label="Status" options={STATUSES} value={status} onChange={setStatus} />
         <FilterGroup label="Severity" options={SEVERITIES} value={severity} onChange={setSeverity} />
       </div>
@@ -80,14 +80,14 @@ function FilterGroup<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="min-w-0 sm:flex sm:items-center sm:gap-2">
       <span className="label">{label}</span>
-      <div className="flex gap-1">
+      <div className="mt-1 flex max-w-full gap-1 overflow-x-auto pb-1 sm:mt-0">
         {options.map((option) => (
           <button
             key={option}
             onClick={() => onChange(option)}
-            className={`rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors ${
+            className={`shrink-0 rounded-sm border px-2.5 py-2 font-mono text-[10px] uppercase tracking-[0.1em] transition-colors ${
               value === option
                 ? "border-trace/50 bg-trace/10 text-trace"
                 : "border-ink-700 text-muted hover:text-paper"

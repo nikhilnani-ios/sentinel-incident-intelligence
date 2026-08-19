@@ -51,7 +51,7 @@ export default function ServicesPage() {
             (group) =>
               group.nodes.length > 0 && (
                 <Panel key={group.tier} title={TIER_LABEL[group.tier]} flush>
-                  <div className="grid grid-cols-2 gap-px bg-ink-700 md:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-px bg-ink-700 sm:grid-cols-2 md:grid-cols-3">
                     {group.nodes.map((node) => (
                       <button
                         key={node.serviceKey}
@@ -117,15 +117,15 @@ function EdgeList({
       ) : (
         <ul className="space-y-1.5">
           {edges.map((edge) => (
-            <li key={`${heading}-${edge.key}`} className="flex items-center gap-3">
-              <span className="w-36 shrink-0 truncate font-mono text-xs text-paper">{edge.key}</span>
-              <span className="h-1 flex-1 overflow-hidden rounded-full bg-ink-700">
+            <li key={`${heading}-${edge.key}`} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 sm:flex sm:items-center">
+              <span className="min-w-0 truncate font-mono text-xs text-paper sm:w-36 sm:shrink-0">{edge.key}</span>
+              <span className="col-span-2 row-start-2 h-1 overflow-hidden rounded-full bg-ink-700 sm:order-none sm:col-span-1 sm:flex-1">
                 <span
                   className="block h-full rounded-full bg-trace/70"
                   style={{ width: `${edge.criticality * 100}%` }}
                 />
               </span>
-              <span className="w-20 shrink-0 text-right font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+              <span className="col-start-2 row-start-1 w-20 shrink-0 text-right font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
                 {edge.kind}
               </span>
             </li>
