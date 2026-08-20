@@ -19,7 +19,7 @@ ARG SERVICE
 COPY . .
 RUN mvn -B -pl ${SERVICE} -am package -DskipTests
 
-FROM eclipse-temurin:21-jre-jammy AS runtime
+FROM eclipse-temurin:22-jre-jammy AS runtime
 ARG SERVICE
 WORKDIR /app
 
